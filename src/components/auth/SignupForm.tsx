@@ -20,7 +20,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const usernameError = validateUsername(username);
@@ -37,12 +37,20 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
       return;
     }
 
-    signup(email);
-    toast({
-      title: "Success",
-      description: "Account created successfully!",
-    });
-    navigate("/home");
+    try {
+      signup(email);
+      toast({
+        title: "Success",
+        description: "Please check your email to confirm your account",
+      });
+    } catch (err) {
+      setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
+    }
   };
 
   return (

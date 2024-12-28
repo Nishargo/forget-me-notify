@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactForm } from "@/components/AddContactForm";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, LogOut } from "lucide-react";
+import { logout } from "@/utils/auth";
 
 interface Contact {
   id: number;
@@ -48,9 +49,19 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-forget-blue mb-2">Forget Me Not</h1>
-          <p className="text-gray-600">Stay connected with your loved ones</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-forget-blue mb-2">Forget Me Not</h1>
+            <p className="text-gray-600">Stay connected with your loved ones</p>
+          </div>
+          <Button
+            onClick={logout}
+            variant="outline"
+            className="bg-white hover:bg-gray-100"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Log out
+          </Button>
         </div>
 
         {!showAddForm && (

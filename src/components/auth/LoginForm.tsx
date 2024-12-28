@@ -29,12 +29,21 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
       return;
     }
 
-    login(email);
-    toast({
-      title: "Success",
-      description: "Login successful!",
-    });
-    navigate("/home");
+    try {
+      login(email);
+      toast({
+        title: "Success",
+        description: "Login successful!",
+      });
+      navigate("/home");
+    } catch (err) {
+      setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
+    }
   };
 
   return (
