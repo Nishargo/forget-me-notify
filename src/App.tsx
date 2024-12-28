@@ -6,47 +6,28 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-route
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import { checkAuth, updateLoginTime } from "./utils/auth";
 
 const queryClient = new QueryClient();
-
-// Auto logout after 30 minutes of inactivity
-const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const isAuthenticated = localStorage.getItem("isAuthenticated");
-      const loginTime = localStorage.getItem("loginTime");
-
-      if (!isAuthenticated || !loginTime) {
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const timeElapsed = Date.now() - parseInt(loginTime);
-      if (timeElapsed > AUTO_LOGOUT_TIME) {
-        localStorage.clear();
-        navigate("/");
-      }
-    };
-
     // Check auth status initially
-    checkAuth();
+    if (!checkAuth()) {
+      navigate("/");
+      return;
+    }
 
     // Set up interval to check auth status
-    const interval = setInterval(checkAuth, 60000); // Check every minute
+    const interval = setInterval(() => {
+      if (!checkAuth()) {
+        navigate("/");
+      }
+    }, 60000); // Check every minute
 
     // Set up activity listeners
-    const updateLoginTime = () => {
-      const isAuthenticated = localStorage.getItem("isAuthenticated");
-      if (isAuthenticated) {
-        localStorage.setItem("loginTime", Date.now().toString());
-      }
-    };
-
     window.addEventListener("mousemove", updateLoginTime);
     window.addEventListener("keydown", updateLoginTime);
 
