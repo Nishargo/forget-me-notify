@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,11 +16,12 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     const usernameError = validateUsername(username);
     const emailError = validateEmail(email);
@@ -29,16 +29,18 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
     
     if (usernameError || emailError || passwordError) {
       setError(usernameError || emailError || passwordError || "");
+      setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      setIsLoading(false);
       return;
     }
 
     try {
-      signup(email);
+      await signup(email, password);
       toast({
         title: "Success",
         description: "Please check your email to confirm your account",
@@ -50,6 +52,8 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
         title: "Error",
         description: (err as Error).message,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -65,6 +69,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Username"
           className="pl-16 h-12 border-forget-yellow focus:border-forget-yellow"
+          disabled={isLoading}
         />
       </div>
 
@@ -78,6 +83,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Your Email ID"
           className="pl-16 h-12 border-forget-yellow focus:border-forget-yellow"
+          disabled={isLoading}
         />
       </div>
 
@@ -91,6 +97,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
           className="pl-16 h-12 border-forget-yellow focus:border-forget-yellow"
+          disabled={isLoading}
         />
       </div>
 
@@ -104,6 +111,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="Confirm Password"
           className="pl-16 h-12 border-forget-yellow focus:border-forget-yellow"
+          disabled={isLoading}
         />
       </div>
 
@@ -112,8 +120,9 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
       <Button
         type="submit"
         className="w-full h-12 bg-forget-yellow hover:bg-forget-yellow/90 text-white"
+        disabled={isLoading}
       >
-        Sign up
+        {isLoading ? "Signing up..." : "Sign up"}
       </Button>
 
       <p className="text-center text-sm">
@@ -122,6 +131,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
           type="button"
           onClick={onToggleMode}
           className="text-forget-yellow hover:underline"
+          disabled={isLoading}
         >
           Log in
         </button>

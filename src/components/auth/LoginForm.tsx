@@ -15,22 +15,25 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
     
     if (emailError || passwordError) {
       setError(emailError || passwordError || "");
+      setIsLoading(false);
       return;
     }
 
     try {
-      login(email);
+      await login(email, password);
       toast({
         title: "Success",
         description: "Login successful!",
@@ -43,6 +46,8 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
         title: "Error",
         description: (err as Error).message,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,6 +63,7 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Your Email ID"
           className="pl-16 h-12 border-forget-yellow focus:border-forget-yellow"
+          disabled={isLoading}
         />
       </div>
 
@@ -71,6 +77,7 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
           className="pl-16 h-12 border-forget-yellow focus:border-forget-yellow"
+          disabled={isLoading}
         />
       </div>
 
@@ -79,8 +86,9 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
       <Button
         type="submit"
         className="w-full h-12 bg-forget-yellow hover:bg-forget-yellow/90 text-white"
+        disabled={isLoading}
       >
-        Log in
+        {isLoading ? "Logging in..." : "Log in"}
       </Button>
 
       <p className="text-center text-sm">
@@ -89,6 +97,7 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
           type="button"
           onClick={onToggleMode}
           className="text-forget-yellow hover:underline"
+          disabled={isLoading}
         >
           Sign up
         </button>
