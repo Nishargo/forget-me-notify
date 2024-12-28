@@ -1,9 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignupForm } from "@/components/auth/SignupForm";
+import { useSearchParams } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (searchParams.get('confirmed') === 'true') {
+      toast({
+        title: "Email confirmed!",
+        description: "You can now log in with your account",
+      });
+    } else if (searchParams.get('error') === 'invalid-token') {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid confirmation link",
+      });
+    }
+  }, [searchParams, toast]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative bg-forget-yellow/20">

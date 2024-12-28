@@ -2,13 +2,33 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import { checkAuth, updateLoginTime } from "./utils/auth";
 
 const queryClient = new QueryClient();
+
+const ConfirmEmail = () => {
+  const { token } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find((u: { confirmationToken: string }) => u.confirmationToken === token);
+    
+    if (user) {
+      user.emailConfirmed = true;
+      localStorage.setItem('users', JSON.stringify(users));
+      navigate('/?confirmed=true');
+    } else {
+      navigate('/?error=invalid-token');
+    }
+  }, [token, navigate]);
+
+  return null;
+};
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -54,6 +74,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/home" element={<PrivateRoute><Index /></PrivateRoute>} />
+          <Route path="/confirm/:token" element={<ConfirmEmail />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </BrowserRouter>
