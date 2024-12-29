@@ -21,11 +21,12 @@ const ConfirmEmail = () => {
     if (user) {
       user.emailConfirmed = true;
       localStorage.setItem('users', JSON.stringify(users));
-      navigate('/?confirmed=true');
+      // Use window.location.origin to get the correct base URL
+      window.location.href = `${window.location.origin}/?confirmed=true`;
     } else {
-      navigate('/?error=invalid-token');
+      window.location.href = `${window.location.origin}/?error=invalid-token`;
     }
-  }, [token, navigate]);
+  }, [token]);
 
   return null;
 };
