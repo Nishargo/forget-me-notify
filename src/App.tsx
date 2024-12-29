@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import { checkAuth, updateLoginTime } from "./utils/auth";
@@ -12,7 +13,7 @@ const queryClient = new QueryClient();
 
 const ConfirmEmail = () => {
   const { token } = useParams();
-  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
@@ -21,12 +22,20 @@ const ConfirmEmail = () => {
     if (user) {
       user.emailConfirmed = true;
       localStorage.setItem('users', JSON.stringify(users));
-      // Use window.location.origin to get the correct base URL
-      window.location.href = `${window.location.origin}/?confirmed=true`;
+      toast({
+        title: "Success",
+        description: "Email confirmed successfully! You can now log in.",
+      });
+      window.location.href = '/';
     } else {
-      window.location.href = `${window.location.origin}/?error=invalid-token`;
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid confirmation link",
+      });
+      window.location.href = '/';
     }
-  }, [token]);
+  }, [token, toast]);
 
   return null;
 };
