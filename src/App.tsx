@@ -2,40 +2,56 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import { checkAuth, updateLoginTime } from "./utils/auth";
+import { supabase } from "./lib/supabase";
 
 const queryClient = new QueryClient();
 
-const ConfirmEmail = () => {
-  const { token } = useParams();
+const AuthCallback = () => {
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find((u: { confirmationToken: string }) => u.confirmationToken === token);
-    
-    if (user) {
-      user.emailConfirmed = true;
-      localStorage.setItem('users', JSON.stringify(users));
-      toast({
-        title: "Success",
-        description: "Email confirmed successfully! You can now log in.",
-      });
-      window.location.href = '/';
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid confirmation link",
-      });
-      window.location.href = '/';
+    const handleAuthCallback = async () => {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const error = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorDescription || "An error occurred during authentication",
+        });
+      } else {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (session) {
+          toast({
+            title: "Success",
+            description: "Email confirmed successfully! You can now log in.",
+          });
+        } else if (sessionError) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: sessionError.message,
+          });
+        }
+      }
+      navigate('/');
+    };
+
+    if (location.hash) {
+      handleAuthCallback();
     }
-  }, [token, toast]);
+  }, [location.hash, toast, navigate]);
 
   return null;
 };
@@ -84,7 +100,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/home" element={<PrivateRoute><Index /></PrivateRoute>} />
-          <Route path="/confirm/:token" element={<ConfirmEmail />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </BrowserRouter>
