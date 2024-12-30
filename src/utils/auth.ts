@@ -19,18 +19,24 @@ export const signup = async (email: string, password: string) => {
     email,
     password,
     options: {
-      emailRedirectTo: window.location.origin + '/auth/callback',
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
       data: {
         email_confirm_sent: true
       }
     }
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Signup error:', error);
+    throw error;
+  }
   
   if (!data?.user?.identities?.length) {
     throw new Error('Email already registered. Please try logging in instead.');
   }
+
+  // Log the signup response for debugging
+  console.log('Signup response:', data);
 
   return data;
 };
