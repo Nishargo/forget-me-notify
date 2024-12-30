@@ -10,6 +10,7 @@ export const login = async (email: string, password: string) => {
   
   if (error) throw error;
 
+  localStorage.setItem("isAuthenticated", "true");
   localStorage.setItem("loginTime", Date.now().toString());
 };
 
@@ -43,8 +44,9 @@ export const logout = async () => {
 export const checkAuth = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   const loginTime = localStorage.getItem("loginTime");
+  const isAuthenticated = localStorage.getItem("isAuthenticated");
 
-  if (!session || !loginTime) {
+  if (!session || !isAuthenticated || !loginTime) {
     logout();
     return false;
   }
