@@ -19,7 +19,7 @@ export const signup = async (email: string, password: string) => {
     email,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      emailRedirectTo: window.location.origin + '/auth/callback',
       data: {
         email_confirm_sent: true
       }

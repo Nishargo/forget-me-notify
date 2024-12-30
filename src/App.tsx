@@ -29,23 +29,27 @@ const AuthCallback = () => {
           title: "Error",
           description: errorDescription || "An error occurred during authentication",
         });
+        navigate('/');
       } else {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (session) {
+          localStorage.setItem("isAuthenticated", "true");
+          localStorage.setItem("loginTime", Date.now().toString());
           toast({
             title: "Success",
             description: "Email confirmed successfully! You can now log in.",
           });
+          navigate('/home');
         } else if (sessionError) {
           toast({
             variant: "destructive",
             title: "Error",
             description: sessionError.message,
           });
+          navigate('/');
         }
       }
-      navigate('/');
     };
 
     if (location.hash) {
