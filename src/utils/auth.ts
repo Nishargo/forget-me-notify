@@ -3,12 +3,55 @@ import { supabase } from '@/lib/supabase';
 export const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 export const login = async (email: string, password: string) => {
+  console.log('Attempting login for email:', email);
+  
+  // First, check if the user exists and if their email is confirmed
+  const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
+    filters: {
+      email: email
+    }
+  });
+
+  if (getUserError) {
+    console.error('Error checking user:', getUserError);
+    throw getUserError;
+  }
+
+  const user = users?.[0];
+  
+  if (!user) {
+    throw new Error('No account found with this email');
+  }
+
+  if (!user.email_confirmed_at) {
+    console.log('Email not confirmed, sending new confirmation email');
+    // Resend confirmation email
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      }
+    });
+
+    if (resendError) {
+      console.error('Error resending confirmation:', resendError);
+      throw resendError;
+    }
+
+    throw new Error('Please confirm your email. A new confirmation email has been sent.');
+  }
+
+  // Proceed with login attempt
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
   
-  if (error) throw error;
+  if (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
 
   localStorage.setItem("isAuthenticated", "true");
   localStorage.setItem("loginTime", Date.now().toString());

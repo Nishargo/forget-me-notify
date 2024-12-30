@@ -22,6 +22,7 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
@@ -40,12 +41,21 @@ export const LoginForm = ({ onToggleMode }: LoginFormProps) => {
       });
       navigate("/home");
     } catch (err) {
-      setError((err as Error).message);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: (err as Error).message,
-      });
+      const errorMessage = (err as Error).message;
+      setError(errorMessage);
+      
+      if (errorMessage.includes('confirmation email has been sent')) {
+        toast({
+          title: "Check your email",
+          description: "A new confirmation email has been sent. Please check your inbox and spam folder.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorMessage,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
