@@ -15,6 +15,8 @@ export const login = async (email: string, password: string) => {
 };
 
 export const signup = async (email: string, password: string) => {
+  console.log('Starting signup process for email:', email);
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -30,13 +32,20 @@ export const signup = async (email: string, password: string) => {
     console.error('Signup error:', error);
     throw error;
   }
+
+  console.log('Signup response:', data);
   
   if (!data?.user?.identities?.length) {
+    console.log('No identities found, user might already exist');
     throw new Error('Email already registered. Please try logging in instead.');
   }
 
-  // Log the signup response for debugging
-  console.log('Signup response:', data);
+  // Check if confirmation email was sent
+  if (!data.user.email_confirmed_at) {
+    console.log('Email confirmation required, confirmation email should be sent');
+  } else {
+    console.log('Email already confirmed');
+  }
 
   return data;
 };

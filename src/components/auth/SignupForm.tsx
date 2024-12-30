@@ -22,6 +22,7 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
     const usernameError = validateUsername(username);
     const emailError = validateEmail(email);
@@ -40,12 +41,24 @@ export const SignupForm = ({ onToggleMode }: SignupFormProps) => {
     }
 
     try {
-      await signup(email, password);
-      toast({
-        title: "Success",
-        description: "Please check your email to confirm your account",
-      });
+      const response = await signup(email, password);
+      console.log("Signup response:", response);
+      
+      if (response?.user?.identities?.length === 0) {
+        setError("Email already registered. Please try logging in instead.");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Email already registered. Please try logging in instead.",
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "A confirmation link has been sent to your email address. Please check your inbox and spam folder.",
+        });
+      }
     } catch (err) {
+      console.error("Signup error:", err);
       setError((err as Error).message);
       toast({
         variant: "destructive",
