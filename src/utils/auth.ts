@@ -7,9 +7,8 @@ export const login = async (email: string, password: string) => {
   
   // First, check if the user exists and if their email is confirmed
   const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-    filters: {
-      email: email
-    }
+    page: 1,
+    perPage: 1
   });
 
   if (getUserError) {
@@ -17,7 +16,7 @@ export const login = async (email: string, password: string) => {
     throw getUserError;
   }
 
-  const user = users?.[0];
+  const user = users?.find(u => u.email === email);
   
   if (!user) {
     throw new Error('No account found with this email');
