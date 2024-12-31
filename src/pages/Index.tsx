@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ContactCard } from "@/components/ContactCard";
 import { AddContactForm } from "@/components/AddContactForm";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut } from "lucide-react";
 import { logout } from "@/utils/auth";
+import { toast } from "sonner";
 
 interface Contact {
   id: number;
@@ -15,6 +16,32 @@ interface Contact {
 const Index = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    // Check for contacts that need reminders
+    const checkReminders = () => {
+      contacts.forEach((contact) => {
+        const daysUntilReminder = getDaysUntilReminder(contact);
+        if (daysUntilReminder <= 0) {
+          toast(`Time to contact ${contact.name}!`, {
+            description: `It's been ${contact.interval} days since your last contact.`,
+            action: {
+              label: "Mark Contacted",
+              onClick: () => markContacted(contact.id),
+            },
+          });
+        }
+      });
+    };
+
+    // Check immediately when component mounts or contacts change
+    checkReminders();
+
+    // Check every hour
+    const interval = setInterval(checkReminders, 1000 * 60 * 60);
+
+    return () => clearInterval(interval);
+  }, [contacts]);
 
   const addContact = ({ name, interval }: { name: string; interval: number }) => {
     setContacts([
