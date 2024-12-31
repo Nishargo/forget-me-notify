@@ -1,56 +1,43 @@
 import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
 
 export const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 export const login = async (email: string, password: string) => {
   console.log('Attempting login for email:', email);
   
-  // First, check if the user exists and if their email is confirmed
-  const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 1
-  });
-
-  if (getUserError) {
-    console.error('Error checking user:', getUserError);
-    throw getUserError;
-  }
-
-  const user = users?.find((u: User) => u.email === email);
-  
-  if (!user) {
-    throw new Error('No account found with this email');
-  }
-
-  if (!user.email_confirmed_at) {
-    console.log('Email not confirmed, sending new confirmation email');
-    // Resend confirmation email
-    const { error: resendError } = await supabase.auth.resend({
-      type: 'signup',
-      email: email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      }
-    });
-
-    if (resendError) {
-      console.error('Error resending confirmation:', resendError);
-      throw resendError;
-    }
-
-    throw new Error('Please confirm your email. A new confirmation email has been sent.');
-  }
-
-  // Proceed with login attempt
-  const { error } = await supabase.auth.signInWithPassword({
+  // First attempt to sign in
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
     email,
     password
   });
-  
-  if (error) {
-    console.error('Login error:', error);
-    throw error;
+
+  if (signInError) {
+    // If the error indicates email is not confirmed
+    if (signInError.message.includes('Email not confirmed')) {
+      console.log('Email not confirmed, sending new confirmation email');
+      // Resend confirmation email
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (resendError) {
+        console.error('Error resending confirmation:', resendError);
+        throw resendError;
+      }
+
+      throw new Error('Please confirm your email. A new confirmation email has been sent.');
+    }
+
+    console.error('Login error:', signInError);
+    throw signInError;
+  }
+
+  if (!signInData.user) {
+    throw new Error('No account found with this email');
   }
 
   localStorage.setItem("isAuthenticated", "true");
