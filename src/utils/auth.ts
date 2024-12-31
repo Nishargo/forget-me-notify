@@ -5,16 +5,19 @@ export const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
 export const login = async (email: string, password: string) => {
   console.log('Attempting login for email:', email);
   
-  // First attempt to sign in
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
-  if (signInError) {
-    // If the error indicates email is not confirmed
-    if (signInError.message.includes('Email not confirmed')) {
-      console.log('Email not confirmed, sending new confirmation email');
+  if (error) {
+    console.error('Login error:', error);
+    
+    if (error.message.includes('Invalid login credentials')) {
+      throw new Error('Invalid email or password. Please try again.');
+    }
+    
+    if (error.message.includes('Email not confirmed')) {
       // Resend confirmation email
       const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
@@ -32,11 +35,10 @@ export const login = async (email: string, password: string) => {
       throw new Error('Please confirm your email. A new confirmation email has been sent.');
     }
 
-    console.error('Login error:', signInError);
-    throw signInError;
+    throw error;
   }
 
-  if (!signInData.user) {
+  if (!data.user) {
     throw new Error('No account found with this email');
   }
 
