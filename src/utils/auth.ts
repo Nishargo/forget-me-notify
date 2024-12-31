@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 export const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
 
@@ -16,7 +17,7 @@ export const login = async (email: string, password: string) => {
     throw getUserError;
   }
 
-  const user = users?.find(u => u.email === email);
+  const user = users?.find((u: User) => u.email === email);
   
   if (!user) {
     throw new Error('No account found with this email');
