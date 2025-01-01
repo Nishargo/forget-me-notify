@@ -1,47 +1,25 @@
-import { useState, useEffect } from "react";
-import { ContactCard } from "@/components/ContactCard";
-import { AddContactForm } from "@/components/AddContactForm";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut } from "lucide-react";
-import { logout } from "@/utils/auth";
-import { toast } from "sonner";
-
-interface Contact {
-  id: number;
-  name: string;
-  lastContact: Date;
-  interval: number;
-}
+import { AddContactForm } from "@/components/AddContactForm";
+import { ContactsList } from "@/components/ContactsList";
+import { Header } from "@/components/Header";
+import { useContactReminders } from "@/hooks/useContactReminders";
+import { Contact } from "@/types/contact";
 
 const Index = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  useEffect(() => {
-    // Check for contacts that need reminders
-    const checkReminders = () => {
-      contacts.forEach((contact) => {
-        const daysUntilReminder = getDaysUntilReminder(contact);
-        if (daysUntilReminder <= 0) {
-          toast(`Time to contact ${contact.name}!`, {
-            description: `It's been ${contact.interval} days since your last contact.`,
-            action: {
-              label: "Mark Contacted",
-              onClick: () => markContacted(contact.id),
-            },
-          });
-        }
-      });
-    };
-
-    // Check immediately when component mounts or contacts change
-    checkReminders();
-
-    // Check every hour
-    const interval = setInterval(checkReminders, 1000 * 60 * 60);
-
-    return () => clearInterval(interval);
-  }, [contacts]);
+  const markContacted = (id: number) => {
+    setContacts(
+      contacts.map((contact) =>
+        contact.id === id
+          ? { ...contact, lastContact: new Date() }
+          : contact
+      )
+    );
+  };
 
   const addContact = ({ name, interval }: { name: string; interval: number }) => {
     setContacts([
@@ -56,40 +34,12 @@ const Index = () => {
     setShowAddForm(false);
   };
 
-  const markContacted = (id: number) => {
-    setContacts(
-      contacts.map((contact) =>
-        contact.id === id
-          ? { ...contact, lastContact: new Date() }
-          : contact
-      )
-    );
-  };
-
-  const getDaysUntilReminder = (contact: Contact) => {
-    const daysSinceContact = Math.floor(
-      (new Date().getTime() - contact.lastContact.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return contact.interval - daysSinceContact;
-  };
+  useContactReminders(contacts, markContacted);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-forget-blue mb-2">Forget Me Not</h1>
-            <p className="text-gray-600">Stay connected with your loved ones</p>
-          </div>
-          <Button
-            onClick={logout}
-            variant="outline"
-            className="bg-white hover:bg-gray-100"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Log out
-          </Button>
-        </div>
+        <Header />
 
         {!showAddForm && (
           <Button
@@ -107,25 +57,7 @@ const Index = () => {
           </div>
         )}
 
-        <div className="space-y-4">
-          {contacts.map((contact) => (
-            <ContactCard
-              key={contact.id}
-              name={contact.name}
-              lastContact={contact.lastContact.toLocaleDateString()}
-              daysUntilReminder={getDaysUntilReminder(contact)}
-              onMarkContacted={() => markContacted(contact.id)}
-            />
-          ))}
-          
-          {contacts.length === 0 && !showAddForm && (
-            <div className="text-center py-12 bg-white rounded-lg">
-              <p className="text-gray-500">
-                No contacts yet. Add your first loved one to get started!
-              </p>
-            </div>
-          )}
-        </div>
+        <ContactsList contacts={contacts} onMarkContacted={markContacted} />
       </div>
     </div>
   );
