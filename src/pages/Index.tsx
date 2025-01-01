@@ -34,16 +34,6 @@ const Index = () => {
     setShowAddForm(false);
   };
 
-  // Test function to simulate time passing
-  const testNotification = () => {
-    setContacts(
-      contacts.map((contact) => ({
-        ...contact,
-        lastContact: new Date(Date.now() - (contact.interval + 1) * 24 * 60 * 60 * 1000)
-      }))
-    );
-  };
-
   useContactReminders(contacts, markContacted);
 
   return (
@@ -52,22 +42,13 @@ const Index = () => {
         <Header />
 
         {!showAddForm && (
-          <div className="space-x-4 mb-6">
-            <Button
-              onClick={() => setShowAddForm(true)}
-              className="bg-forget-pink hover:bg-forget-pink/90"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Loved One
-            </Button>
-            <Button
-              onClick={testNotification}
-              variant="outline"
-              className="hover:bg-forget-blue/10"
-            >
-              Test Notifications
-            </Button>
-          </div>
+          <Button
+            onClick={() => setShowAddForm(true)}
+            className="bg-forget-pink hover:bg-forget-pink/90 mb-6"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Loved One
+          </Button>
         )}
 
         {showAddForm && (

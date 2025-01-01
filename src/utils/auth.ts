@@ -72,7 +72,6 @@ export const signup = async (email: string, password: string) => {
     throw new Error('Email already registered. Please try logging in instead.');
   }
 
-  // Check if confirmation email was sent
   if (!data.user.email_confirmed_at) {
     console.log('Email confirmation required, confirmation email should be sent');
   } else {
@@ -83,9 +82,20 @@ export const signup = async (email: string, password: string) => {
 };
 
 export const logout = async () => {
-  await supabase.auth.signOut();
-  localStorage.clear();
-  window.location.href = '/';
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error during logout:', error);
+      throw error;
+    }
+    localStorage.clear();
+    window.location.href = '/';
+  } catch (error) {
+    console.error('Logout failed:', error);
+    // Force logout even if Supabase fails
+    localStorage.clear();
+    window.location.href = '/';
+  }
 };
 
 export const checkAuth = async () => {
